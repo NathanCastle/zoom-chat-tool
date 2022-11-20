@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Zoom chat log formatter</title>
+    <link rel="stylesheet" href="./meet.css" />
+  </head>
+  <body>
+    <div id="parent-container">
+      <div id="upload-area">
+            <input type="file" id="upload-button" onchange="onChange()">
+      </div>
+      <div id="raw-source" class="box">
+        <div class="row header">
+            <h2>Original file contents</h2>
+        </div>
+        <div class="output-container row content">
+            <pre id="raw-file-contents"></pre>
+        </div>
+      </div>
+      <div id="markdown-source" class="box">
+        <div class="row header">
+            <h2>Markdown</h2>
+        </div>
+        <div class="row header">
+            <input type="checkbox" checked onclick="handleObsidianLinkChange(this)">
+        </div>
+        <div class="output-container row content">
+            <pre id="markdown-contents"></pre>
+        </div>
+      </div>
+      <div id="markdown-preview" class="box">
+        <div class="row header">
+            <h2>HTML (copy-paste)</h2>
+        </div>
+        <div class="row header">
+            <button id="copy-btn">Copy to clipboard</button>
+        </div>
+        <div class="output-container row content">
+            <div id="html-output-view"></div>
+        </div>
+      </div>
+    </div>
+    <script src="./meet.js"></script>
+  </body>
+</html>
