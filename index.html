@@ -8,16 +8,16 @@
     <link rel="stylesheet" href="./meet.css" />
   </head>
   <body>
-    <div id="parent-container">
-      <div id="upload-area">
-        <label for="upload-button" class="custom-upload-button">
-            Open
-        </label>
-            <input type="file" id="upload-button" onchange="onChange()">
-      </div>
+    <div class="page-layout">
       <div id="raw-source" class="box">
         <div class="row header">
-            <h2>Original file contents</h2>
+            <h2>Input file</h2>
+        </div>
+        <div class="row toolrow">
+          <label for="upload-button" class="btn">
+            Import
+        </label>
+            <input type="file" id="upload-button" style="display:none;" onchange="onChange()">
         </div>
         <div class="output-container row content">
             <pre id="raw-file-contents"></pre>
@@ -27,7 +27,7 @@
         <div class="row header">
             <h2>Markdown</h2>
         </div>
-        <div class="row header">
+        <div class="row toolrow">
             <input type="checkbox" checked onclick="handleObsidianLinkChange(this)">
         </div>
         <div class="output-container row content">
@@ -38,8 +38,8 @@
         <div class="row header">
             <h2>HTML (copy-paste)</h2>
         </div>
-        <div class="row header">
-            <button id="copy-btn">Copy to clipboard</button>
+        <div class="row toolrow">
+            <button class="btn" id="copy-btn">Copy to clipboard</button>
         </div>
         <div class="output-container row content">
             <div id="html-output-view"></div>

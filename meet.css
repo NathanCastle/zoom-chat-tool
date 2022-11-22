@@ -1,79 +1,134 @@
-body {
-    height:100%;
-    margin:0;
-    overflow: hidden;
+/* variables */
+:root{
+    --chrome-background: rgba(230,220,220);
+    --chrome-panel-background: #B3ABAB;
+    --app-background: var(--chrome-background);
+    --content-background: #fff;
+    --border-color: rgba(110,100,100);
+    --button-default: rgba(206,220,130);
+    --button-hover: rgba(215,220,140);
+    --button-press: #B3AB72;
+    --tint-start: rgba(174,120,200);
+    --tint-alt: rgba(192,122,192);
+}
+/* resets */
+* {
     box-sizing: border-box;
 }
-#parent-container{
+body {
+    background-color: var(--app-background);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  padding: 0;
+  margin: 0;
+}
+
+/* button styles */
+
+.btn {
+    background: var(--button-default);
+    border-style: solid;
+    border-color: var(--border-color);
+    padding:8px;
+    border-width: 2px;
+    display:block;
+    font-weight:600;
+    font-size: 1rem;
+    margin-right: 0.5rem;
+    margin-bottom: 0.5rem;
+    user-select: none;
+    -webkit-user-select: none;
+    cursor: pointer;
+}
+
+.btn:hover{
+    background: var(--button-hover);
+}
+
+.btn:active{
+    background: var(--button-press);
+    cursor: pointer;
+}
+
+/* Page layout */
+
+.page-layout {
     display:grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    grid-template-rows: 100px 1fr;
+    grid-template-columns: 1fr 1fr 1fr 1rem;
+    grid-template-rows: auto 1fr;
     grid-row-gap: 1rem;
     grid-column-gap: 0.5rem;
-    position: absolute;
-    left:0px;
-    top:0px;
-    width: 100%;
-    height: 100vh;
-    max-height: 100vh;
-    background-color: #dfdfdf;
+    padding:0.5rem;
+    width:100vw;
+    height:100vh;
 }
 
 h2 {
-    text-align: center;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-    background-image: linear-gradient(90deg, red, grey);
+    background-image: linear-gradient(90deg, var(--tint-start), var(--tint-alt));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+    margin: 0.25rem;
+    padding: 0;
 }
 
-#upload-area {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-}
-
-#upload-button {
-    position:relative;
-    width: fit-content;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-#parent-container #upload-area{
-    min-width: 0;
-    grid-row: 1 / 2;
-    grid-column: 1 / 4;
-    background-color: red;
-}
-
-#parent-container #raw-source{
+.page-layout #raw-source{
     min-width: 0;
     min-height: 0;
     grid-row: 2/3;
     grid-column: 1/2;
-    background-color: #eaeaea;
 }
 
-#parent-container #markdown-source{
+.page-layout #markdown-source{
     min-width: 0;
     min-height: 0;
     grid-row: 2/3;
     grid-column: 2/3;
-    background-color: #eaeaea;
 }
 
-#parent-container #markdown-preview{
+.page-layout #markdown-preview{
     min-width: 0;
     min-height: 0;
     grid-row: 2/3;
     grid-column: 3/4;
-    background-color: #eaeaea;
 }
 
+
+/* Panel inner layout */
+.box {
+    display: grid;
+    background-color: var(--app-background);
+    border-color: var(--border-color);
+    border-width: 1px;
+    border-style: solid;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 3.5rem 1fr auto;
+  }
+  .toolrow {
+    background-color: var(--chrome-panel-background);
+    padding-left: 0.5rem;
+    padding-top: 0.5rem;
+    grid-column: 1 / 2;
+    grid-row: 2 / 3;
+
+  }
+  .box .row.header {
+    grid-column: 1 / 2;
+    grid-row: 1 / 2;
+    white-space: nowrap;
+  }
+
+  .box .row.content {
+    grid-column: 1 / 2;
+    grid-row: 3 / 4;
+  }
+  .box .row.footer {
+    flex: 0 1 40px;
+  }
+
+/* Output formatting */
 .output-container {
     overflow: scroll;
+    padding:0.5rem;
 }
 
 pre {
@@ -84,21 +139,8 @@ pre {
     white-space: -o-pre-wrap;    /* Opera 7 */
     word-wrap: break-word;       /* Internet Explorer 5.5+ */
     padding: 0.5rem;
+    background-color: var(--content-background);
 }
-
-.box {
-    display: flex;
-    flex-flow: column;
-    height: 100%;
-  }
-  .box .row {
-  }
-  .box .row.header {
-    flex: 0 1 auto;
-  }
-  .box .row.content {
-    flex: 1 1 auto;
-  }
-  .box .row.footer {
-    flex: 0 1 40px;
-  }
+pre:empty{
+    display:none;
+}
