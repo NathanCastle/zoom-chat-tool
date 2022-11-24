@@ -1,6 +1,53 @@
 var fileContents = "";
 var htmlOutput = null;
 
+class substitutionsViewModel {
+    static REPLACEMENT_SETTINGS_KEY = "zoom-chat-tool-replacements"
+    liveCopy = [];
+    substitutionsChangeCallback = null;
+  constructor(substitutionsChange) {
+    this.substitutionsChangeCallback = substitutionsChange;
+    if (substitutionsViewModel._instance) {
+      return substitutionsViewModel._instance;
+    }
+    substitutionsViewModel._instance = this;
+  }
+
+  addReplacement(input, replacementValue){
+    this.liveCopy.push({'SEARCH_KEY': input, 'REPLACEMENT_VALUE': replacementValue})
+    this.persistToBrowser();
+    this.substitutionsChangeCallback?.call(this);
+  }
+
+  reset() {
+    this.liveCopy = []
+    this.persistToBrowser();
+    this.substitutionsChangeCallback?.call(this);
+  }
+
+  populateFromBrowser(){
+    if (!window.localStorage){
+        return;
+    }
+
+    let storedSettings = window.localStorage.getItem(substitutionsViewModel.REPLACEMENT_SETTINGS_KEY)
+    if (storedSettings){
+        this.liveCopy = JSON.parse(storedSettings);
+    }
+    if (this.substitutionsChangeCallback){
+        this.substitutionsChangeCallback.call(this);
+    }
+  }
+
+  persistToBrowser(){
+    if (!window.localStorage) {
+        console.log('cant save settings... localstorage not available');
+        return;
+    }
+    window.localStorage.setItem(substitutionsViewModel.REPLACEMENT_SETTINGS_KEY, JSON.stringify(this.liveCopy));
+  }
+}
+
 class fileViewModel {
   fileName = "";
   rawContents = "";
@@ -25,8 +72,33 @@ class fileViewModel {
     };
   }
 
+  /*
+  substitutions is [{SEARCH_KEY:key,REPLACEMENT_VALUE:value}]
+  */
+  applyFilter(substitutions){
+    if (!this.rawContents){
+        this.filteredContents = "";
+        return;
+    }
+
+    let replacedContents = `${this.rawContents}`
+    for(var keypair of substitutions){
+        let startSearchIndex = 0;
+        let searchKey = keypair["SEARCH_KEY"]
+        let replacement = keypair["REPLACEMENT_VALUE"]
+        while (replacedContents.indexOf(searchKey, startSearchIndex) > -1){
+            let currentReplacementIndex = replacedContents.indexOf(searchKey, startSearchIndex);
+            replacedContents = replacedContents.substring(0, currentReplacementIndex) + 
+                             replacedContents.substring(currentReplacementIndex).replace(searchKey, replacement)
+            startSearchIndex  = currentReplacementIndex + replacement.length - searchKey.length;
+        }
+    }
+    this.filteredContents = replacedContents;
+    this.parseAndRender();
+  }
+
   parseAndRender() {
-    this.parsedContents = this._convertToSchema(this.rawContents);
+    this.parsedContents = this._convertToSchema(this.filteredContents);
     this.mdForDisplay = this._convertSchemaToMarkdown(this.parsedContents);
     this.htmlForDisplay = this._convertSchemaToHtml(this.parsedContents);
     this.htmlForPrint = this.htmlForDisplay.cloneNode(true);
@@ -37,7 +109,7 @@ class fileViewModel {
     let lines = inputText.split("\n");
 
     let statements = [];
-    var statementInProgress = null;
+    let statementInProgress = null;
 
     let timeRegex = /^(([0-9]{2})\:){2}([0-9]{2})/g;
 
@@ -129,11 +201,50 @@ class fileViewModel {
 }
 
 let fileVM = new fileViewModel(renderContent);
+let substitutionVM = new substitutionsViewModel(renderSettingsPane);
+
+function renderSettingsPane(){
+    if (!substitutionVM?.liveCopy){
+        return;
+    }
+    let container = document.createElement('ul');
+
+    substitutionVM.liveCopy.map((input) => {
+        let root = document.createElement('li');
+        let searchInput = document.createElement('input');
+        searchInput.value = input["SEARCH_KEY"]
+        let replacementInput = document.createElement('input');
+        replacementInput.value = input["REPLACEMENT_VALUE"]
+        root.appendChild(searchInput);
+        root.appendChild(replacementInput);
+        container.appendChild(root);
+    });
+    document.getElementById('replacement-area-root').removeEventListener('change', _handleChange)
+    document.getElementById('replacement-area-root').innerHTML = "";
+    document.getElementById('replacement-area-root').appendChild(container);
+    container.addEventListener('change', _handleChange);
+}
+
+function _handleChange(inputEvt){
+    // get root ul
+    let root = document.getElementById('replacement-area-root').firstChild
+
+    // read through li
+    let keys = root.querySelectorAll('li');
+    let results = [...keys].map((inputLi) => {
+        let [firstInput, secondInput] = inputLi.querySelectorAll('input');
+        return {"SEARCH_KEY": firstInput.value, "REPLACEMENT_VALUE": secondInput.value};
+    });
+    substitutionVM.liveCopy = results;
+    substitutionVM.persistToBrowser();
+    // apply new search
+    fileVM.applyFilter(substitutionVM.liveCopy)
+}
 
 function handleObsidianLinkChange(evt) {
   enableObsidianLinks = evt.checked;
   if (fileVM) {
-    fileVM.useWikiLinksInMarkdown = evt.checked
+    fileVM.useWikiLinksInMarkdown = evt.checked;
     fileVM.parseAndRender();
   }
 }
@@ -163,10 +274,10 @@ function renderContent() {
 }
 
 function handleCopyHtml(evt) {
-    handleCopy(evt, fileVM.htmlForDisplay.innerHTML)
+  handleCopy(evt, fileVM.htmlForDisplay.innerHTML);
 }
-function handleCopyMd(evt){
-    handleCopy(evt, fileVM.mdForDisplay)
+function handleCopyMd(evt) {
+  handleCopy(evt, fileVM.mdForDisplay);
 }
 async function handleCopy(evt, content) {
   if (navigator.clipboard) {
@@ -193,6 +304,14 @@ async function handleCopy(evt, content) {
   document.execCommand("copy");
 }
 
+function handleAddReplacement() {
+    substitutionVM.addReplacement('example_to_replace', 'replaced_with');
+}
 
-document.getElementById("copy-btn-html").addEventListener("click", handleCopyHtml);
+document
+  .getElementById("copy-btn-html")
+  .addEventListener("click", handleCopyHtml);
 document.getElementById("copy-btn-md").addEventListener("click", handleCopyMd);
+document.getElementById('btn-add-replacement').addEventListener('click', handleAddReplacement)
+document.getElementById('btn-reset-settings').addEventListener('click', (evt) => substitutionVM.reset())
+substitutionVM.populateFromBrowser();
