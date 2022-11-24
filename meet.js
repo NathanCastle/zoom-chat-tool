@@ -16,13 +16,19 @@ class substitutionsViewModel {
   addReplacement(input, replacementValue){
     this.liveCopy.push({'SEARCH_KEY': input, 'REPLACEMENT_VALUE': replacementValue})
     this.persistToBrowser();
-    this.substitutionsChangeCallback?.call(this);
+    this.substitutionsChangeCallback?.call();
+  }
+
+  applyNewSettings(newSubs){
+    this.liveCopy = newSubs;
+    this.persistToBrowser();
+    this.substitutionsChangeCallback?.call();
   }
 
   reset() {
     this.liveCopy = []
     this.persistToBrowser();
-    this.substitutionsChangeCallback?.call(this);
+    this.substitutionsChangeCallback?.call();
   }
 
   populateFromBrowser(){
@@ -61,6 +67,8 @@ class fileViewModel {
 
   renderCallback = null;
 
+  substitutions = []
+
   reader = new FileReader();
 
   constructor(renderCallback) {
@@ -68,6 +76,7 @@ class fileViewModel {
     this.reader.onload = (event) => {
       this.rawContents = event.target.result;
       this.filteredContents = `${this.rawContents}`;
+      this.applyFilter();
       this.parseAndRender();
     };
   }
@@ -75,17 +84,23 @@ class fileViewModel {
   /*
   substitutions is [{SEARCH_KEY:key,REPLACEMENT_VALUE:value}]
   */
-  applyFilter(substitutions){
+  applyFilter(){
     if (!this.rawContents){
         this.filteredContents = "";
         return;
     }
+    if (!this.substitutions){
+        return;
+    }
 
     let replacedContents = `${this.rawContents}`
-    for(var keypair of substitutions){
+    for(var keypair of this.substitutions){
         let startSearchIndex = 0;
         let searchKey = keypair["SEARCH_KEY"]
         let replacement = keypair["REPLACEMENT_VALUE"]
+        if (!searchKey){
+            continue;
+        }
         while (replacedContents.indexOf(searchKey, startSearchIndex) > -1){
             let currentReplacementIndex = replacedContents.indexOf(searchKey, startSearchIndex);
             replacedContents = replacedContents.substring(0, currentReplacementIndex) + 
@@ -94,10 +109,10 @@ class fileViewModel {
         }
     }
     this.filteredContents = replacedContents;
-    this.parseAndRender();
   }
 
   parseAndRender() {
+    this.applyFilter();
     this.parsedContents = this._convertToSchema(this.filteredContents);
     this.mdForDisplay = this._convertSchemaToMarkdown(this.parsedContents);
     this.htmlForDisplay = this._convertSchemaToHtml(this.parsedContents);
@@ -201,7 +216,13 @@ class fileViewModel {
 }
 
 let fileVM = new fileViewModel(renderContent);
-let substitutionVM = new substitutionsViewModel(renderSettingsPane);
+let substitutionVM = new substitutionsViewModel(handleSubstitutionsChanged);
+
+function handleSubstitutionsChanged() {
+    fileVM.substitutions = substitutionVM.liveCopy;
+    fileVM.parseAndRender();
+    renderSettingsPane();
+}
 
 function renderSettingsPane(){
     if (!substitutionVM?.liveCopy){
@@ -214,6 +235,7 @@ function renderSettingsPane(){
         let searchInput = document.createElement('input');
         searchInput.value = input["SEARCH_KEY"]
         let replacementInput = document.createElement('input');
+        replacementInput.className = "input-replacement-value"
         replacementInput.value = input["REPLACEMENT_VALUE"]
         root.appendChild(searchInput);
         root.appendChild(replacementInput);
@@ -235,10 +257,7 @@ function _handleChange(inputEvt){
         let [firstInput, secondInput] = inputLi.querySelectorAll('input');
         return {"SEARCH_KEY": firstInput.value, "REPLACEMENT_VALUE": secondInput.value};
     });
-    substitutionVM.liveCopy = results;
-    substitutionVM.persistToBrowser();
-    // apply new search
-    fileVM.applyFilter(substitutionVM.liveCopy)
+    substitutionVM.applyNewSettings(results);
 }
 
 function handleObsidianLinkChange(evt) {
@@ -314,4 +333,61 @@ document
 document.getElementById("copy-btn-md").addEventListener("click", handleCopyMd);
 document.getElementById('btn-add-replacement').addEventListener('click', handleAddReplacement)
 document.getElementById('btn-reset-settings').addEventListener('click', (evt) => substitutionVM.reset())
+
+// Set up selection hover tools
+let floatingTool = document.importNode(document.querySelector('template').content, true).childNodes[0];
+let htmlOutputView = document.getElementById('html-output-view');
+var lastValidSelection = ""
+htmlOutputView.onpointerup = () => {
+  let selection = document.getSelection(), text = selection.toString();
+  lastValidSelection = text;
+  if (text !== "") {
+    let rect = selection.getRangeAt(0).getBoundingClientRect();
+    console.dir(rect);
+    floatingTool.style.top = `calc(${rect.top}px - 2rem)`;
+    floatingTool.style.left = `calc(${rect.left}px + calc(${rect.width}px / 2) - 2.5rem)`;
+    floatingTool['text']= text; 
+    document.body.appendChild(floatingTool);
+  }
+}
+ // set up event listeners
+ let replaceAll = floatingTool.querySelector('#flt-btn-replace-all');
+ replaceAll.addEventListener('click', (evt) => {
+    console.dir(document.getSelection())
+     substitutionVM.addReplacement(lastValidSelection, "replacement value")
+     focusLastReplacementInput();
+ }, false);
+
+ // helper to focus last selection
+ function focusLastReplacementInput(){
+    clearFloater();
+    let replacementArea = document.getElementById('replacement-area-root');
+    let allReplacements = [...replacementArea.querySelectorAll('input.input-replacement-value')]
+    if (allReplacements.length > 0){
+        let targetNode = allReplacements[allReplacements.length - 1]
+        targetNode.focus()
+        targetNode.setSelectionRange(0, targetNode.value.length)
+    }
+ }
+
+ // close listener
+document.onpointerdown = (evt) => {
+    console.log(evt.target)
+    console.log(document.querySelector('#flt-btn-replace-all'))
+    if (evt.target === document.querySelector('#flt-btn-replace-all')){
+        return;
+    }
+    clearFloater();
+}
+
+function clearFloater(){
+    let floatingTool = document.getElementById('floatingTool');
+    if (floatingTool){
+        floatingTool.remove();
+        document.getSelection().removeAllRanges();
+    }
+
+}
+
 substitutionVM.populateFromBrowser();
+fileVM.substitutions = substitutionVM.liveCopy;

@@ -199,6 +199,27 @@ pre:empty {
   }
 }
 
+
+/* Floating control */
+
+#floatingTool {
+    position:absolute;
+    width: max-content;
+    background-color: black;
+    color: white;
+    border: 4px solid var(--pop-color-button);
+    vertical-align: top;
+    padding: 0.15rem;
+}
+
+#floatingTool a {
+    cursor: pointer;
+}
+
+#floatingTool a:hover{
+    text-decoration: underline;
+}
+
 /* fancy tricks */
 .halftone {
   --dotSize: 2px;
