@@ -22,6 +22,11 @@ general border: black
     --border-color: #aaa;
     --text-color: #eee;
   }
+
+
+.panel-contents > #html-output-view ::selection {
+    color: black;
+}
 }
 @media (prefers-color-scheme: light) {
   :root {
@@ -42,14 +47,17 @@ general border: black
 
 body {
   background-color: var(--background-default);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  font-family: 'American Typewriter', serif;
   padding: 0;
   margin: 0;
   color: var(--text-color);
 }
 
 /* button styles */
+
+button {
+    font-family: 'American Typewriter', serif;
+}
 
 .btn {
   background: var(--background-default);
@@ -118,7 +126,9 @@ body {
   transform: translateX(100%);
   padding: 0.5rem 0rem;
   text-shadow: 0px 1px var(--background-decoration);
-  color: red;
+  color: var(--pop-color);
+  font-family: 'Didot', serif;
+  letter-spacing: -1px;
 }
 
 .app-panel > .panel-toolbox {
@@ -131,6 +141,14 @@ body {
   overflow: scroll;
   height: 100%;
   order: 1;
+}
+
+#html-output-view {
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.panel-contents > #html-output-view ::selection {
+    background: var(--pop-color-button);
 }
 
 @media screen and (max-width: 1000px) {
@@ -162,6 +180,7 @@ body {
     color: unset;
     text-shadow: unset;
   }
+
   #raw-file-contents {
     display: none;
   }
@@ -172,6 +191,7 @@ body {
   overflow: scroll;
   padding: 0.5rem;
 }
+
 
 pre {
   white-space: pre-wrap; /* Since CSS 2.1 */
@@ -199,6 +219,10 @@ pre:empty {
   }
 }
 
+h3 {
+    text-align: center;
+    margin: 0.5rem;
+}
 
 /* Floating control */
 
@@ -228,7 +252,6 @@ pre:empty {
 }
 
 .halftone::after {
-  /* Cover our element */
   content: "";
   position: absolute;
   inset: 0;
