@@ -8,43 +8,69 @@
     <link rel="stylesheet" href="./meet.css" />
   </head>
   <body>
-    <div class="page-layout">
-      <div id="raw-source" class="box">
-        <div class="row header">
-            <h2>Input file</h2>
-        </div>
-        <div class="row toolrow">
-          <label for="upload-button" class="btn">
-            Import
-        </label>
-            <input type="file" id="upload-button" style="display:none;" onchange="onChange()">
-        </div>
-        <div class="output-container row content">
+    <!-- App view: dynamic panels -->
+    <div class="halftone screen-only"></div>
+    <div class="app-layout screen-only">
+      <div class="panel-navigator"></div>
+      <div class="app-panel-container">
+        <!-- Import panel-->
+        <div class="app-panel">
+          <h2 class="panel-label">Import</h2>
+          <div class="panel-toolbox">
+            <label for="upload-button" class="btn">
+              Open file
+              <input
+                type="file"
+                id="upload-button"
+                style="display: none"
+                onchange="onChange()"
+              />
+            </label>
+          </div>
+          <div class="panel-contents">
             <pre id="raw-file-contents"></pre>
+          </div>
         </div>
-      </div>
-      <div id="markdown-source" class="box">
-        <div class="row header">
-            <h2>Markdown</h2>
+        <!-- Edit panel-->
+        <div class="app-panel">
+          <h2 class="panel-label">Filter and Edit</h2>
+          <div class="panel-toolbox"></div>
         </div>
-        <div class="row toolrow">
-            <input type="checkbox" checked onclick="handleObsidianLinkChange(this)">
-        </div>
-        <div class="output-container row content">
-            <pre id="markdown-contents"></pre>
-        </div>
-      </div>
-      <div id="markdown-preview" class="box">
-        <div class="row header">
-            <h2>HTML (copy-paste)</h2>
-        </div>
-        <div class="row toolrow">
-            <button class="btn" id="copy-btn">Copy to clipboard</button>
-        </div>
-        <div class="output-container row content">
+        <!-- Export panel-->
+        <div class="app-panel">
+          <h2 class="panel-label">Export</h2>
+          <div class="panel-toolbox">
+            <button class="btn" id="copy-btn-html">Copy Formatted</button>
+            <button class="btn" id="copy-btn-md">Copy Markdown</button>
+          </div>
+          <div class="panel-contents">
+            <h3>Formatted preview</h3>
             <div id="html-output-view"></div>
+          </div>
+          <div class="panel-toolbox">
+            <input
+              id="markdown-format-checkbox"
+              type="checkbox"
+              style="display: none;"
+              onclick="handleObsidianLinkChange(this)"
+            />
+            <label class="btn" for="markdown-format-checkbox">
+              Use wiki link in markdown
+            </label>
+          </div>
+          <div class="panel-contents">
+            <h3>Markdown preview</h3>
+            <pre id="markdown-contents"></pre>
+          </div>
         </div>
       </div>
+    </div>
+    <!-- Custom view for easy printing -->
+    <div class="print-only">
+      <h1>Zoom Chat Export</h1>
+      <article>
+        <div id="html-print-view"></div>
+      </article>
     </div>
     <script src="./meet.js"></script>
   </body>
