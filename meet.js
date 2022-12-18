@@ -120,37 +120,66 @@ class fileViewModel {
     this.renderCallback?.call();
   }
 
+  _getStatementStyleTwo(line){
+    var splitter = line.indexOf("\t") > -1 ? "\t" : "	 ";
+    let fromParts = line.split("From");
+    if (fromParts.length != 2){
+      console.log(line)
+    }
+    let statementParts = fromParts[1].split(':')
+    // Handle different format
+    let statement = 
+    {
+      timestamp: fromParts[0].trim(),
+      from: statementParts[0].trim(),
+      to: "Everyone",
+      contents: statementParts[1].trim()
+    };
+    return statement;
+  }
+
   _convertToSchema(inputText) {
     let lines = inputText.split("\n");
 
     let statements = [];
     let statementInProgress = null;
 
-    let timeRegex = /^(([0-9]{2})\:){2}([0-9]{2})/g;
-
     for (var line of lines) {
+      let timeRegex = /^(([0-9]{2})\:){2}([0-9]{2})/g;
+      if (line.trim() === ""){
+        continue;
+      }
       if (timeRegex.test(line)) {
-        if (statementInProgress != null) {
-          statementInProgress.contents = statementInProgress.contents.trim();
-          statements.push(statementInProgress);
+        if (line.indexOf("	 From  ") > -1){
+          statements.push(this._getStatementStyleTwo(line));
         }
-        statementInProgress = {
-          timestamp: "",
-          from: "",
-          to: "",
-          contents: "",
-        };
-        let fromParts = line.split(" From ", 2);
-        statementInProgress.timestamp = fromParts[0];
-        // TODO = handle cases where name contains ' to '
-        let toParts = fromParts[1].split(" to ");
-        statementInProgress.from = toParts[0];
-        statementInProgress.to = toParts[1].split(":")[0];
+        else {
+          if (statementInProgress != null) {
+            statementInProgress.contents = statementInProgress.contents.trim();
+            statements.push(statementInProgress);
+          }
+          statementInProgress = {
+            timestamp: "",
+            from: "",
+            to: "",
+            contents: "",
+          };
+          let fromParts = line.split(" From ", 2);
+          statementInProgress.timestamp = fromParts[0];
+          // TODO = handle cases where name contains ' to '
+          let toParts = fromParts[1].split(" to ");
+          statementInProgress.from = toParts[0];
+          statementInProgress.to = toParts[1].split(":")[0];
+        }
+        
       } else if (statementInProgress != null) {
         statementInProgress.contents = `${
           statementInProgress.contents
         }\n${line.trim()}`;
       }
+    }
+    if (statementInProgress != null){
+      statements.push(statementInProgress);
     }
     return statements;
   }
@@ -372,8 +401,6 @@ htmlOutputView.onpointerup = () => {
 
  // close listener
 document.onpointerdown = (evt) => {
-    console.log(evt.target)
-    console.log(document.querySelector('#flt-btn-replace-all'))
     if (evt.target === document.querySelector('#flt-btn-replace-all')){
         return;
     }
