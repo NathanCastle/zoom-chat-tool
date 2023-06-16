@@ -121,8 +121,8 @@ class fileViewModel {
   }
 
   _getStatementStyleTwo(line){
-    var splitter = line.indexOf("\t") > -1 ? "\t" : "	 ";
-    let fromParts = line.split("From");
+    var splitter = line.indexOf("\t") > -1 ? "\t" : " From ";
+    let fromParts = line.split(splitter);
     if (fromParts.length != 2){
       console.log(line)
     }
@@ -134,6 +134,17 @@ class fileViewModel {
       from: statementParts[0].trim(),
       to: "Everyone",
       contents: statementParts[1].trim()
+    };
+    return statement;
+  }
+  _getStatementStyleThree(line){
+    let parts = line.split("\t");
+    let statement = 
+    {
+      timestamp: parts[0].trim(),
+      from: parts[1].trim(),
+      to: "Everyone",
+      contents: parts.length > 2 ? parts[2].trim() : ""
     };
     return statement;
   }
@@ -150,8 +161,27 @@ class fileViewModel {
         continue;
       }
       if (timeRegex.test(line)) {
-        if (line.indexOf("	 From  ") > -1){
-          statements.push(this._getStatementStyleTwo(line));
+        if (line.indexOf(" From ") > -1){
+          try {
+            if (statementInProgress != null){
+              statements.push(statementInProgress);
+            }
+            statementInProgress = this._getStatementStyleTwo(line);
+          }
+          catch(err){
+            console.log(err);
+            console.log(line);
+          }
+        }
+        // line doesn't contain "From" or "to"
+        else if (line.indexOf("	 From  ") === -1 && line.indexOf("\t") > -1){
+          try {
+            statements.push(this._getStatementStyleThree(line));
+          }
+          catch(err){
+            console.log(err);
+            console.log(line);
+          }
         }
         else {
           if (statementInProgress != null) {
