@@ -131,7 +131,7 @@ class fileViewModel {
     let statement = 
     {
       timestamp: fromParts[0].trim(),
-      from: statementParts[0].trim(),
+      from: statementParts[0].trim().split(":")[0],
       to: "Everyone",
       contents: statementParts[1].trim()
     };
@@ -142,7 +142,7 @@ class fileViewModel {
     let statement = 
     {
       timestamp: parts[0].trim(),
-      from: parts[1].trim(),
+      from: parts[1].trim().split(":")[0],
       to: "Everyone",
       contents: parts.length > 2 ? parts[2].trim() : ""
     };
@@ -164,6 +164,11 @@ class fileViewModel {
         if (line.indexOf(" From ") > -1){
           try {
             if (statementInProgress != null){
+              if (statementInProgress.from.indexOf(" to ") > -1){
+                let parts = statementInProgress.from.split(" to ");
+                statementInProgress.from = parts[0].trim().split(":")[0];
+                statementInProgress.to = parts[1].trim().split(":")[0];
+              }
               statements.push(statementInProgress);
             }
             statementInProgress = this._getStatementStyleTwo(line);
@@ -223,7 +228,7 @@ class fileViewModel {
       }
 
       if (this.useWikiLinksInMarkdown === true) {
-        output = `${output}\n- [[${entry.from}]]: ${entry.contents.trim()}`;
+        output = `${output}\n- [[${entry.from}]]: (${entry.timestamp}) ${entry.contents.trim()}`;
       } else {
         output = `${output}\n- **${entry.from}**: (${
           entry.timestamp
@@ -352,20 +357,32 @@ function renderContent() {
 }
 
 function handleCopyHtml(evt) {
-  handleCopy(evt, fileVM.htmlForDisplay.innerHTML);
+  handleCopy(evt, fileVM.htmlForDisplay.innerHTML, true);
 }
 function handleCopyMd(evt) {
-  handleCopy(evt, fileVM.mdForDisplay);
+  handleCopy(evt, fileVM.mdForDisplay, false);
 }
-async function handleCopy(evt, content) {
+async function handleCopy(evt, content, useHtml) {
   if (navigator.clipboard) {
     try {
-      const blob = new Blob([content], { type: "text/html" });
-      await navigator.clipboard.write([
-        new ClipboardItem({
-          "text/html": blob,
-        }),
-      ]);
+      if (useHtml) {
+        const blob = new Blob([content], { type: "text/html" });
+        await navigator.clipboard.write([
+          new ClipboardItem({
+            "text/html": blob,
+          }),
+        ]);
+
+      }
+      else {
+        const blob = new Blob([content], { type: "text/plain"});
+        await navigator.clipboard.write([
+          new ClipboardItem({
+            "text/plain": blob,
+          }),
+        ]);
+      }
+
       return;
     } catch (ex) {
       console.dir(ex);
