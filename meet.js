@@ -122,7 +122,7 @@ class fileViewModel {
 
   _getStatementStyleTwo(line){
     var splitter = line.indexOf("\t") > -1 ? "\t" : " From ";
-    let fromParts = line.split(splitter);
+    let fromParts = line.split(" From ", 2);
     if (fromParts.length != 2){
       console.log(line)
     }
@@ -164,8 +164,15 @@ class fileViewModel {
         if (line.indexOf(" From ") > -1){
           try {
             if (statementInProgress != null){
-              if (statementInProgress.from.indexOf(" to ") > -1){
-                let parts = statementInProgress.from.split(" to ");
+              let splitter = null;
+              if (statementInProgress.from.indexOf(" To ") > -1){
+                splitter = " To ";
+              }
+              else if (statementInProgress.from.indexOf(" to ") > -1){
+                splitter = " to "
+              }
+              if (splitter){
+                let parts = statementInProgress.from.split(splitter);
                 statementInProgress.from = parts[0].trim().split(":")[0];
                 statementInProgress.to = parts[1].trim().split(":")[0];
               }
@@ -179,7 +186,7 @@ class fileViewModel {
           }
         }
         // line doesn't contain "From" or "to"
-        else if (line.indexOf("	 From  ") === -1 && line.indexOf("\t") > -1){
+        else if (line.indexOf(" From ") === -1 && line.indexOf("\t") > -1){
           try {
             statements.push(this._getStatementStyleThree(line));
           }
